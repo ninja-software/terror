@@ -26,7 +26,7 @@ const genericErrorMessage string = "program error occured, please contact admin 
 // maxDepth maximum depth the error/panic will unwrap or traverse
 var maxDepth int = 20
 
-// AppVersion holds the version of the app, maybe remove when become module
+// AppVersion holds the version of the caller app
 var AppVersion string = "v0.0.0"
 
 // Error is the custom error type
@@ -41,7 +41,7 @@ type Error struct {
 	Meta     map[string]string // any additional information that is useful in debugging error (backend only, do not expose this to user)
 }
 
-// SetVersion a hack to get the parent version, will remove when terror becomes a module
+// SetVersion so caller can set the correct version, and echo correct version
 func SetVersion(v string) {
 	AppVersion = v
 }
@@ -74,7 +74,10 @@ func new(err error, file, funcName string, line int, message string, errKind Err
 		log.Println("ERROR: Number of KVs not even")
 	}
 
-	if len(message) == 0 {
+	// if friendly message is not included, then it will use err.Error()
+	if len(message) == 0 && err != nil {
+		message = err.Error()
+	} else if len(message) == 0 {
 		message = genericErrorMessage
 	}
 

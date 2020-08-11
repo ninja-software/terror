@@ -42,8 +42,12 @@ var ErrBadCredentials = errors.New("bad credentials")
 // ErrNotImplemented for non-implemented funcs
 var ErrNotImplemented = errors.New("not implemented")
 
-// ErrUnauthorized for bad permissions
+// ErrUnauthorized for bad permissions.
+// Deprecated: Use terror.ErrUnauthorised instead
 var ErrUnauthorized = errors.New("unauthorized")
+
+// ErrUnauthorised for bad permissions
+var ErrUnauthorised = errors.New("unauthorised")
 
 // ErrNilUUID for nil uuid
 var ErrNilUUID = errors.New("uuid is nil")
@@ -51,8 +55,8 @@ var ErrNilUUID = errors.New("uuid is nil")
 // ErrBadContext for missing context values
 var ErrBadContext = errors.New("bad context")
 
-// ErrAuthNoEmail during authencation when login failed due to non-existant user email address
+// ErrAuthNoEmail during authentication when login failed due to non-existant user email address
 var ErrAuthNoEmail = errors.New("user not found")
 
-// ErrAuthWrongPassword during authencation when login failed due to incorrect incorrect password
+// ErrAuthWrongPassword during authentication when login failed due to incorrect incorrect password
 var ErrAuthWrongPassword = errors.New("wrong password")

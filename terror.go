@@ -13,7 +13,7 @@ import (
 )
 
 // baseVersion actual version of terror module
-const baseVersion = "v0.0.2"
+const baseVersion = "v0.0.4"
 
 // ErrKind Kind of error
 type ErrKind string
@@ -34,6 +34,7 @@ var AppVersion string = "v0.0.0"
 
 // Error is the custom error type
 type Error struct {
+	IsNil    bool              // error is nil
 	IsPanic  bool              // is it a panic
 	File     string            // which file caused error
 	FuncName string            // which function caused error
@@ -97,6 +98,10 @@ func new(err error, file, funcName string, line int, message string, errKind Err
 
 // New returns a new Error, zero length message will use generic message
 func New(err error, friendlyMessage string, kvs ...string) *Error {
+	if err == nil {
+		return &Error{IsNil: true}
+	}
+
 	pc, file, line, _ := runtime.Caller(1)
 	funcName := runtime.FuncForPC(pc).Name()
 
@@ -105,6 +110,10 @@ func New(err error, friendlyMessage string, kvs ...string) *Error {
 
 // NewPanic returns a new Error, zero length message will use generic message
 func NewPanic(err error) *Error {
+	if err == nil {
+		return &Error{IsNil: true}
+	}
+
 	return &Error{
 		IsPanic: true,
 		Err:     err,
@@ -114,6 +123,10 @@ func NewPanic(err error) *Error {
 
 // Echo will walk through error stack and echo output to the screen
 func Echo(err error) string {
+	if err == nil {
+		return "Error is nil"
+	}
+
 	i := 0
 	j := 0
 	var xErr *Error
@@ -121,8 +134,12 @@ func Echo(err error) string {
 	verrLines := []string{}
 	g := err
 	for {
-		if errors.As(g, &xErr) {
-			if xErr.IsPanic {
+		if xErr == nil {
+			return "Error is nil"
+		} else if errors.As(g, &xErr) {
+			if xErr.IsNil {
+				return "Error is nil"
+			} else if xErr.IsPanic {
 				return EchoPanic(xErr)
 			}
 			i++

@@ -133,9 +133,7 @@ func Echo(err error) string {
 	verrLines := []string{}
 	g := err
 	for {
-		if xErr == nil {
-			return "Error is nil"
-		} else if errors.As(g, &xErr) {
+		if errors.As(g, &xErr) {
 			if xErr.IsPanic {
 				return EchoPanic(xErr)
 			}

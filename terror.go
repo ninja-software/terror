@@ -13,7 +13,7 @@ import (
 )
 
 // baseVersion actual version of terror module
-const baseVersion = "v0.0.2"
+const baseVersion = "v0.0.5"
 
 // ErrKind Kind of error
 type ErrKind string
@@ -97,6 +97,10 @@ func new(err error, file, funcName string, line int, message string, errKind Err
 
 // New returns a new Error, zero length message will use generic message
 func New(err error, friendlyMessage string, kvs ...string) *Error {
+	if err == nil {
+		return nil
+	}
+
 	pc, file, line, _ := runtime.Caller(1)
 	funcName := runtime.FuncForPC(pc).Name()
 
@@ -105,6 +109,10 @@ func New(err error, friendlyMessage string, kvs ...string) *Error {
 
 // NewPanic returns a new Error, zero length message will use generic message
 func NewPanic(err error) *Error {
+	if err == nil {
+		return nil
+	}
+
 	return &Error{
 		IsPanic: true,
 		Err:     err,
@@ -114,6 +122,10 @@ func NewPanic(err error) *Error {
 
 // Echo will walk through error stack and echo output to the screen
 func Echo(err error) string {
+	if err == nil {
+		return "Error is nil (Echo)"
+	}
+
 	i := 0
 	j := 0
 	var xErr *Error
@@ -170,6 +182,10 @@ func Echo(err error) string {
 
 // EchoPanic will walk through panic stack and echo output to the screen
 func EchoPanic(err *Error) string {
+	if err == nil {
+		return "Error is nil (EchoPanic)"
+	}
+
 	lines := []string{}
 	vlines := []string{} // vanilla line, without ascii colour
 	// need to adjust i depth, depending on the project

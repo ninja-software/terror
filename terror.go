@@ -123,7 +123,7 @@ func NewPanic(err error) *Error {
 // Echo will walk through error stack and echo output to the screen
 func Echo(err error) string {
 	if err == nil {
-		return "Error is nil"
+		return "Error is nil (Echo)"
 	}
 
 	i := 0
@@ -182,6 +182,10 @@ func Echo(err error) string {
 
 // EchoPanic will walk through panic stack and echo output to the screen
 func EchoPanic(err *Error) string {
+	if err == nil {
+		return "Error is nil (EchoPanic)"
+	}
+
 	lines := []string{}
 	vlines := []string{} // vanilla line, without ascii colour
 	// need to adjust i depth, depending on the project

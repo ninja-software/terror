@@ -111,7 +111,7 @@ func New(err error, friendlyMessage string, kvs ...string) *Error {
 // NewPanic returns a new Error, zero length message will use generic message
 func NewPanic(err error) *Error {
 	if err == nil {
-		return nil
+		err = fmt.Errorf("Error is nil (NewPanic)")
 	}
 
 	return &Error{

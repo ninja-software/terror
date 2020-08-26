@@ -51,7 +51,6 @@ func SetVersion(v string) {
 
 // Error mimic golang errors.Error
 func (e *Error) Error() string {
-	spew.Dump(e)
 	return e.Message
 }
 

@@ -51,17 +51,11 @@ func SetVersion(v string) {
 
 // Error mimic golang errors.Error
 func (e *Error) Error() string {
-	if e == nil {
-		return "error is nil"
-	}
 	return e.Message
 }
 
 // Unwrap the underlying error
 func (e *Error) Unwrap() error {
-	if e == nil {
-		return fmt.Errorf("error is nil")
-	}
 	return e.Err
 }
 
@@ -103,8 +97,9 @@ func new(err error, file, funcName string, line int, message string, errKind Err
 
 // New returns a new Error, zero length message will use generic message
 func New(err error, friendlyMessage string, kvs ...string) *Error {
+	// deals with accidental error == nil
 	if err == nil {
-		return nil
+		err = fmt.Errorf("Error is nil (New)")
 	}
 
 	pc, file, line, _ := runtime.Caller(1)
@@ -139,12 +134,7 @@ func Echo(err error) string {
 	verrLines := []string{}
 	g := err
 	for {
-		if g == nil {
-			errLines = append(errLines, fmt.Sprintf("  %d > \033[1;34m%s\033[0m[%s:%d] %s", i, xErr.FuncName, xErr.File, xErr.Line, "err is nil"))
-			verrLines = append(verrLines, fmt.Sprintf("  %d > %s[%s:%d] %s", i, xErr.FuncName, xErr.File, xErr.Line, "err is nil"))
-			i++
-			break
-		} else if errors.As(g, &xErr) {
+		if errors.As(g, &xErr) {
 			if xErr.IsPanic {
 				return EchoPanic(xErr)
 			}

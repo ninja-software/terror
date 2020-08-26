@@ -10,8 +10,6 @@ import (
 	"log"
 	"runtime"
 	"strings"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 // baseVersion actual version of terror module

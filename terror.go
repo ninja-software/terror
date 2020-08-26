@@ -136,7 +136,12 @@ func Echo(err error) string {
 	verrLines := []string{}
 	g := err
 	for {
-		if errors.As(g, &xErr) {
+		if g == nil {
+			errLines = append(errLines, fmt.Sprintf("  %d > \033[1;34m%s\033[0m[%s:%d] %s", i, xErr.FuncName, xErr.File, xErr.Line, "err is nil"))
+			verrLines = append(verrLines, fmt.Sprintf("  %d > %s[%s:%d] %s", i, xErr.FuncName, xErr.File, xErr.Line, "err is nil"))
+			i++
+			break
+		} else if errors.As(g, &xErr) {
 			if xErr.IsPanic {
 				return EchoPanic(xErr)
 			}

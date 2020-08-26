@@ -13,7 +13,7 @@ import (
 )
 
 // baseVersion actual version of terror module
-const baseVersion = "v0.0.5"
+const baseVersion = "v0.0.6"
 
 // ErrKind Kind of error
 type ErrKind string
@@ -26,8 +26,8 @@ const ErrKindInput ErrKind = "input"
 
 const genericErrorMessage string = "program error occured, please contact admin if error continues"
 
-// maxDepth maximum depth the error/panic will unwrap or traverse
-var maxDepth int = 20
+// MaxDepth maximum depth the error/panic will unwrap or traverse, can change to suit needs
+var MaxDepth int = 20
 
 // AppVersion holds the version of the caller app
 var AppVersion string = "v0.0.0"
@@ -161,9 +161,9 @@ func Echo(err error) string {
 		j++
 
 		// gone too deep, stop
-		if j > maxDepth {
-			errLines = append(errLines, fmt.Sprintf("stop >%d deep", maxDepth))
-			verrLines = append(verrLines, fmt.Sprintf("stop >%d deep", maxDepth))
+		if j > MaxDepth {
+			errLines = append(errLines, fmt.Sprintf("stop >%d deep", MaxDepth))
+			verrLines = append(verrLines, fmt.Sprintf("stop >%d deep", MaxDepth))
 			break
 		}
 	}
@@ -191,7 +191,7 @@ func EchoPanic(err *Error) string {
 	// need to adjust i depth, depending on the project
 	i := 2
 	j := 0
-	for j < maxDepth {
+	for j < MaxDepth {
 		pc, fn, line, _ := runtime.Caller(i)
 		if line == 0 {
 			break
@@ -201,7 +201,7 @@ func EchoPanic(err *Error) string {
 		i++
 		j++
 	}
-	if j >= maxDepth {
+	if j >= MaxDepth {
 		lines = append(lines, fmt.Sprintf("  %d > exceeded max depth", j))
 		vlines = append(vlines, fmt.Sprintf("  %d > exceeded max depth", j))
 	}

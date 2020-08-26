@@ -51,11 +51,17 @@ func SetVersion(v string) {
 
 // Error mimic golang errors.Error
 func (e *Error) Error() string {
+	if e == nil {
+		return "error is nil"
+	}
 	return e.Message
 }
 
 // Unwrap the underlying error
 func (e *Error) Unwrap() error {
+	if e == nil {
+		return fmt.Errorf("error is nil")
+	}
 	return e.Err
 }
 

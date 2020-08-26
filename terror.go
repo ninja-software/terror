@@ -13,7 +13,7 @@ import (
 )
 
 // baseVersion actual version of terror module
-const baseVersion = "v0.0.6"
+const baseVersion = "v0.0.7"
 
 // ErrKind Kind of error
 type ErrKind string
@@ -97,8 +97,9 @@ func new(err error, file, funcName string, line int, message string, errKind Err
 
 // New returns a new Error, zero length message will use generic message
 func New(err error, friendlyMessage string, kvs ...string) *Error {
+	// deals with accidental error == nil
 	if err == nil {
-		return nil
+		err = fmt.Errorf("Error is nil (New)")
 	}
 
 	pc, file, line, _ := runtime.Caller(1)
@@ -109,8 +110,9 @@ func New(err error, friendlyMessage string, kvs ...string) *Error {
 
 // NewPanic returns a new Error, zero length message will use generic message
 func NewPanic(err error) *Error {
+	// deals with accidental error == nil
 	if err == nil {
-		return nil
+		err = fmt.Errorf("Error is nil (NewPanic)")
 	}
 
 	return &Error{

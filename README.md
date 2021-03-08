@@ -29,10 +29,10 @@ terror.Echo(err)
 
 ### Note
 
-Always use `terror.New()` or it will not trace. E.g.
+Always use `terror.Error()` or it will not trace. E.g.
 
 ```go
-return terror.New(terror.ErrBadContext, "")  // good
+return terror.Error(terror.ErrBadContext, "")  // good
 ```
 
 not
@@ -41,7 +41,7 @@ not
 return terror.ErrBadContext  // bad
 ```
 
-Blank string like `terror.New(err, "")`, will default to use err.Error() string.
+Blank string like `terror.Error(err, "")`, will default to use err.Error() string.
 
 ### Output
 

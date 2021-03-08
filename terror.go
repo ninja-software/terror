@@ -13,7 +13,7 @@ import (
 )
 
 // baseVersion actual version of terror module
-const baseVersion string = "v1.0.0"
+const baseVersion string = "v2.0.0-alpha"
 
 // ErrKind Kind of error
 type ErrKind string
@@ -24,7 +24,8 @@ const ErrKindSystem ErrKind = "system"
 // ErrKindInput error caused by failing sanity check or bad or invalid input
 const ErrKindInput ErrKind = "input"
 
-const genericErrorMessage string = "program error occured, please contact admin if error continues"
+// ErrMessageGeneric basic message to be used for the error
+const ErrMessageGeneric string = "program error occured, please contact admin if error continues"
 
 // MaxDepth maximum depth the error/panic will unwrap or traverse, can change to suit needs
 var MaxDepth int = 20
@@ -32,9 +33,28 @@ var MaxDepth int = 20
 // AppVersion holds the version of the caller app
 var AppVersion string = "v0.0.0"
 
-// Error is the custom error type
-type Error struct {
-	IsPanic  bool              // is it a panic
+// ErrLevel type
+type ErrLevel int
+
+// Various error level
+const (
+	ErrLevelWarn ErrLevel = iota + 1
+	ErrLevelError
+	ErrLevelPanic
+)
+
+// FuncExec is type executing function for certain level
+type FuncExec func(interface{}, error)
+
+var (
+	funcDoWarn  *FuncExec // error that is not require action
+	funcDoError *FuncExec // error that require action
+	funcDoPanic *FuncExec // error that require action but a panic
+)
+
+// TError is the custom error type
+type TError struct {
+	Level    ErrLevel          // error level
 	File     string            // which file caused error
 	FuncName string            // which function caused error
 	Line     int               // which line caused error
@@ -50,17 +70,37 @@ func SetVersion(v string) {
 }
 
 // Error mimic golang errors.Error
-func (e *Error) Error() string {
+func (e *TError) Error() string {
 	return e.Message
 }
 
 // Unwrap the underlying error
-func (e *Error) Unwrap() error {
+func (e *TError) Unwrap() error {
 	return e.Err
 }
 
+// KVs sets the key-value for the error to add extra level of log
+func (e *TError) KVs(kvs ...string) {
+	meta := map[string]string{}
+	if len(kvs)%2 == 0 {
+		prev := ""
+		for i, val := range kvs {
+			if i%2 == 0 {
+				meta[val] = ""
+			} else {
+				meta[prev] = val
+			}
+			prev = val
+		}
+	} else {
+		meta["kvNotEven"] = "Number of KVs not even"
+		log.Println("ERROR: Number of KVs not even")
+	}
+	e.Meta = meta
+}
+
 // new constructor for Error with full parameters support
-func new(err error, file, funcName string, line int, message string, errKind ErrKind, kvs ...string) *Error {
+func new(err error, file, funcName string, line int, message string, errKind ErrKind, errLevel ErrLevel, kvs ...string) *TError {
 	meta := map[string]string{}
 	if len(kvs)%2 == 0 {
 		prev := ""
@@ -81,10 +121,11 @@ func new(err error, file, funcName string, line int, message string, errKind Err
 	if len(message) == 0 && err != nil {
 		message = err.Error()
 	} else if len(message) == 0 {
-		message = genericErrorMessage
+		message = ErrMessageGeneric
 	}
 
-	return &Error{
+	return &TError{
+		Level:    errLevel,
 		File:     file,
 		FuncName: funcName,
 		Line:     line,
@@ -95,31 +136,84 @@ func new(err error, file, funcName string, line int, message string, errKind Err
 	}
 }
 
-// New returns a new Error, zero length message will use generic message
-func New(err error, friendlyMessage string, kvs ...string) *Error {
+// SetCallbackWarn set callback function when .Warn() called
+func SetCallbackWarn(callback FuncExec) {
+	funcDoWarn = &callback
+}
+
+// SetCallbackError set callback function when .Error() called
+func SetCallbackError(callback FuncExec) {
+	funcDoError = &callback
+}
+
+// SetCallbackPanic set callback function when .Panic() called
+func SetCallbackPanic(callback FuncExec) {
+	funcDoPanic = &callback
+}
+
+// Error returns TError with level error
+func Error(err error, friendlyMessage ...string) *TError {
 	// deals with accidental error == nil
 	if err == nil {
-		err = fmt.Errorf("Error is nil (New)")
+		err = fmt.Errorf("Error is nil (Error)")
 	}
 
 	pc, file, line, _ := runtime.Caller(1)
 	funcName := runtime.FuncForPC(pc).Name()
 
-	return new(err, file, funcName, line, friendlyMessage, ErrKindSystem, kvs...)
+	msg := err.Error()
+	if len(friendlyMessage) > 0 {
+		msg = strings.Join(friendlyMessage, ". ")
+	}
+
+	return new(err, file, funcName, line, msg, ErrKindSystem, ErrLevelError)
 }
 
-// NewPanic returns a new Error, zero length message will use generic message
-func NewPanic(err error) *Error {
+// Panic returns a new TError with level Panic
+func Panic(err error, friendlyMessage ...string) *TError {
 	// deals with accidental error == nil
 	if err == nil {
-		err = fmt.Errorf("Error is nil (NewPanic)")
+		err = fmt.Errorf("Error is nil (Panic)")
 	}
 
-	return &Error{
-		IsPanic: true,
-		Err:     err,
-		Message: err.Error(),
+	msg := err.Error()
+	if len(friendlyMessage) > 0 {
+		msg = strings.Join(friendlyMessage, ". ")
 	}
+
+	return &TError{
+		Level:   ErrLevelPanic,
+		Err:     err,
+		Message: msg,
+	}
+}
+
+// Warn returns a new TError with level Warn
+func Warn(err error, friendlyMessage ...string) *TError {
+	// deals with accidental error == nil
+	if err == nil {
+		err = fmt.Errorf("Error is nil (Warn)")
+	}
+
+	msg := err.Error()
+	if len(friendlyMessage) > 0 {
+		msg = strings.Join(friendlyMessage, ". ")
+	}
+
+	return &TError{
+		Level:   ErrLevelWarn,
+		Err:     err,
+		Message: msg,
+	}
+}
+
+// GetLevel will find out if error is TError and their level. 0 is not a TError
+func GetLevel(err error) ErrLevel {
+	e, ok := err.(*TError)
+	if !ok {
+		return 0
+	}
+	return e.Level
 }
 
 // Echo will walk through error stack and echo output to the screen
@@ -130,23 +224,23 @@ func Echo(err error) string {
 
 	i := 0
 	j := 0
-	var xErr *Error
+	var xErr *TError
 	errLines := []string{}
 	verrLines := []string{}
 	g := err
 	for {
 		if errors.As(g, &xErr) {
-			if xErr.IsPanic {
-				return EchoPanic(xErr)
+			if xErr.Level == ErrLevelPanic {
+				return echoPanic(xErr)
 			}
 			i++
 			errLines = append(errLines, fmt.Sprintf("  %d > \033[1;34m%s\033[0m[%s:%d] %v", i, xErr.FuncName, xErr.File, xErr.Line, xErr))
 			verrLines = append(verrLines, fmt.Sprintf("  %d > %s[%s:%d] %v", i, xErr.FuncName, xErr.File, xErr.Line, xErr))
 			g = xErr.Unwrap()
 
-		} else if xe, ok := g.(*Error); ok {
-			if xErr.IsPanic {
-				return EchoPanic(xErr)
+		} else if xe, ok := g.(*TError); ok {
+			if xErr.Level == ErrLevelPanic {
+				return echoPanic(xErr)
 			}
 			i++
 			errLines = append(errLines, fmt.Sprintf("  %d > \033[1;34m%s\033[0m[%s:%d] %v", i, xe.FuncName, xe.File, xe.Line, xe))
@@ -182,10 +276,10 @@ func Echo(err error) string {
 	return vout
 }
 
-// EchoPanic will walk through panic stack and echo output to the screen
-func EchoPanic(err *Error) string {
+// echoPanic will walk through panic stack and echo output to the screen
+func echoPanic(err *TError) string {
 	if err == nil {
-		return "Error is nil (EchoPanic)"
+		return "Error is nil (echoPanic)"
 	}
 
 	lines := []string{}

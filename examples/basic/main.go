@@ -7,7 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ninja-software/terror"
+	"../../terror"
+	// "github.com/ninja-software/terror/v2"
 )
 
 const AppVersion = "v1.2.3"

@@ -268,6 +268,8 @@ func Echo(err error) string {
 	errLines = StringSliceReverse(errLines)
 	verrLines = StringSliceReverse(verrLines)
 
+	// TODO WARN COLOUR - 93 BRIGHT YELLOW
+
 	out := fmt.Sprintf("\033[1;31mERROR\033[0m ver: %s  \n%+v", AppVersion, strings.Join(errLines, "\n"))
 	msg := strings.SplitAfterN(verrLines[0], " > ", 2)[1]
 	vout := fmt.Sprintf("ERROR  %s\n%+v", msg, strings.Join(verrLines, "\n"))

@@ -222,6 +222,9 @@ func Echo(err error) string {
 		return "Error is nil (Echo)"
 	}
 
+	level := 0
+	isSet := false
+
 	i := 0
 	j := 0
 	var xErr *TError
@@ -230,6 +233,10 @@ func Echo(err error) string {
 	g := err
 	for {
 		if errors.As(g, &xErr) {
+			if !isSet {
+				isSet = true
+				level = int(xErr.Level)
+			}
 			if xErr.Level == ErrLevelPanic {
 				return echoPanic(xErr)
 			}
@@ -239,6 +246,10 @@ func Echo(err error) string {
 			g = xErr.Unwrap()
 
 		} else if xe, ok := g.(*TError); ok {
+			if !isSet {
+				isSet = true
+				level = int(xe.Level)
+			}
 			if xErr.Level == ErrLevelPanic {
 				return echoPanic(xErr)
 			}
@@ -268,9 +279,14 @@ func Echo(err error) string {
 	errLines = StringSliceReverse(errLines)
 	verrLines = StringSliceReverse(verrLines)
 
-	// TODO WARN COLOUR - 93 BRIGHT YELLOW
-
-	out := fmt.Sprintf("\033[1;31mERROR\033[0m ver: %s  \n%+v", AppVersion, strings.Join(errLines, "\n"))
+	out := ""
+	if level == int(ErrLevelWarn) {
+		// Yellow WARN text
+		out = fmt.Sprintf("\033[1;33mWARN\033[0m ver: %s  \n%+v", AppVersion, strings.Join(errLines, "\n"))
+	} else {
+		// Red ERROR text
+		out = fmt.Sprintf("\033[1;31mERROR\033[0m ver: %s  \n%+v", AppVersion, strings.Join(errLines, "\n"))
+	}
 	msg := strings.SplitAfterN(verrLines[0], " > ", 2)[1]
 	vout := fmt.Sprintf("ERROR  %s\n%+v", msg, strings.Join(verrLines, "\n"))
 
@@ -304,7 +320,8 @@ func echoPanic(err *TError) string {
 		vlines = append(vlines, fmt.Sprintf("  %d > exceeded max depth", j))
 	}
 
-	out := fmt.Sprintf("\033[1;31mPANIC\033[0m ver: %s  %s \n%+v", AppVersion, err.Message, strings.Join(lines, "\n"))
+	// Red background and White Blinking PANIC text
+	out := fmt.Sprintf("\033[5;41;37mPANIC\033[0m ver: %s  %s \n%+v", AppVersion, err.Message, strings.Join(lines, "\n"))
 	vout := fmt.Sprintf("PANIC  %s\n%+v", err.Message, strings.Join(vlines, "\n"))
 
 	log.Println(out)

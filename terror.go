@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"runtime"
+	"runtime/debug"
 	"strings"
 )
 
@@ -46,6 +47,7 @@ const (
 // FuncExec is type executing function for certain level
 type FuncExec func(interface{}, error)
 
+// various function to run for certain error level
 var (
 	funcDoWarn  *FuncExec // error that is not require action
 	funcDoError *FuncExec // error that require action
@@ -291,6 +293,36 @@ func Echo(err error) string {
 	vout := fmt.Sprintf("ERROR  %s\n%+v", msg, strings.Join(verrLines, "\n"))
 
 	log.Println(out)
+
+	// recover from panic from funcDoWarn, funcDoError
+	defer func() {
+		if rec := recover(); rec != nil {
+			message := "Terror funcDoWarn/funcDoError panicked"
+			strStack := string(debug.Stack())
+
+			var err error
+			switch v := rec.(type) {
+			case error:
+				err = v
+			default:
+				err = fmt.Errorf(message)
+			}
+
+			log.Printf("Terror funcDoWarn/funcDoError recovered: %s. %s\n", err.Error(), strStack)
+		}
+	}()
+
+	// execute function
+	if level == int(ErrLevelWarn) {
+		if funcDoWarn != nil {
+			(*funcDoWarn)(nil, err)
+		}
+	} else {
+		if funcDoError != nil {
+			(*funcDoError)(nil, err)
+		}
+	}
+
 	return vout
 }
 
@@ -325,5 +357,29 @@ func echoPanic(err *TError) string {
 	vout := fmt.Sprintf("PANIC  %s\n%+v", err.Message, strings.Join(vlines, "\n"))
 
 	log.Println(out)
+
+	// recover from panic from funcDoPanic
+	defer func() {
+		if rec := recover(); rec != nil {
+			message := "Terror funcDoPanic panick-panick"
+			strStack := string(debug.Stack())
+
+			var err error
+			switch v := rec.(type) {
+			case error:
+				err = v
+			default:
+				err = fmt.Errorf(message)
+			}
+
+			log.Printf("Terror funcDoPanic panick-panick recovered: %s. %s\n", err.Error(), strStack)
+		}
+	}()
+
+	// exec function
+	if funcDoPanic != nil {
+		(*funcDoPanic)(nil, err)
+	}
+
 	return vout
 }

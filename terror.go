@@ -44,26 +44,29 @@ const (
 	ErrLevelPanic
 )
 
-// FuncExec is type executing function for certain level
-type FuncExec func(interface{}, error)
+// funcExec is type executing function for certain level
+type funcExec func(Meta, error)
 
 // various function to run for certain error level
 var (
-	funcDoWarn  *FuncExec // error that is not require action
-	funcDoError *FuncExec // error that require action
-	funcDoPanic *FuncExec // error that require action but a panic
+	funcDoWarn  *funcExec // error that is not require action
+	funcDoError *funcExec // error that require action
+	funcDoPanic *funcExec // error that require action but a panic
 )
+
+// Meta data type
+type Meta map[string]string
 
 // TError is the custom error type
 type TError struct {
-	Level    ErrLevel          // error level
-	File     string            // which file caused error
-	FuncName string            // which function caused error
-	Line     int               // which line caused error
-	Message  string            // friendly message to the user or error log storage
-	Err      error             // actual that is refered to
-	ErrKind  ErrKind           // kind of error
-	Meta     map[string]string // any additional information that is useful in debugging error (backend only, do not expose this to user)
+	Level    ErrLevel // error level
+	File     string   // which file caused error
+	FuncName string   // which function caused error
+	Line     int      // which line caused error
+	Message  string   // friendly message to the user or error log storage
+	Err      error    // actual that is refered to
+	ErrKind  ErrKind  // kind of error
+	Meta     Meta     // any additional information that is useful in debugging error (backend only, do not expose this to user. flat, so each meta layer could overwrite accidentally)
 }
 
 // SetVersion so caller can set the correct version, and echo correct version
@@ -82,23 +85,26 @@ func (e *TError) Unwrap() error {
 }
 
 // KVs sets the key-value for the error to add extra level of log
-func (e *TError) KVs(kvs ...string) {
-	meta := map[string]string{}
+func (e *TError) KVs(kvs ...string) *TError {
+	if e.Meta == nil {
+		e.Meta = Meta{}
+	}
+
 	if len(kvs)%2 == 0 {
 		prev := ""
 		for i, val := range kvs {
 			if i%2 == 0 {
-				meta[val] = ""
+				e.Meta[val] = ""
 			} else {
-				meta[prev] = val
+				e.Meta[prev] = val
 			}
 			prev = val
 		}
 	} else {
-		meta["kvNotEven"] = "Number of KVs not even"
+		e.Meta["kvNotEven"] = "Number of KVs not even"
 		log.Println("ERROR: Number of KVs not even")
 	}
-	e.Meta = meta
+	return e
 }
 
 // new constructor for Error with full parameters support
@@ -139,17 +145,17 @@ func new(err error, file, funcName string, line int, message string, errKind Err
 }
 
 // SetCallbackWarn set callback function when .Warn() called
-func SetCallbackWarn(callback FuncExec) {
+func SetCallbackWarn(callback funcExec) {
 	funcDoWarn = &callback
 }
 
 // SetCallbackError set callback function when .Error() called
-func SetCallbackError(callback FuncExec) {
+func SetCallbackError(callback funcExec) {
 	funcDoError = &callback
 }
 
 // SetCallbackPanic set callback function when .Panic() called
-func SetCallbackPanic(callback FuncExec) {
+func SetCallbackPanic(callback funcExec) {
 	funcDoPanic = &callback
 }
 
@@ -225,22 +231,22 @@ func Echo(err error) string {
 	}
 
 	level := 0
-	isSet := false
 
 	i := 0
 	j := 0
 	var xErr *TError
 	errLines := []string{}
 	verrLines := []string{}
+	metaData := Meta{}
 	g := err
 	for {
 		if errors.As(g, &xErr) {
-			if !isSet {
-				isSet = true
-				level = int(xErr.Level)
+			level = int(xErr.Level)
+			for k, v := range xErr.Meta {
+				metaData[k] = v
 			}
 			if xErr.Level == ErrLevelPanic {
-				return echoPanic(xErr)
+				return echoPanic(xErr, metaData)
 			}
 			i++
 			errLines = append(errLines, fmt.Sprintf("  %d > \033[1;34m%s\033[0m[%s:%d] %v", i, xErr.FuncName, xErr.File, xErr.Line, xErr))
@@ -248,12 +254,12 @@ func Echo(err error) string {
 			g = xErr.Unwrap()
 
 		} else if xe, ok := g.(*TError); ok {
-			if !isSet {
-				isSet = true
-				level = int(xe.Level)
+			level = int(xe.Level)
+			for k, v := range xErr.Meta {
+				metaData[k] = v
 			}
 			if xErr.Level == ErrLevelPanic {
-				return echoPanic(xErr)
+				return echoPanic(xErr, metaData)
 			}
 			i++
 			errLines = append(errLines, fmt.Sprintf("  %d > \033[1;34m%s\033[0m[%s:%d] %v", i, xe.FuncName, xe.File, xe.Line, xe))
@@ -297,7 +303,10 @@ func Echo(err error) string {
 	// recover from panic from funcDoWarn, funcDoError
 	defer func() {
 		if rec := recover(); rec != nil {
-			message := "Terror funcDoWarn/funcDoError panicked"
+			message := "terror funcDoError panicked"
+			if level == int(ErrLevelWarn) {
+				message = "terror funcDoWarn panicked"
+			}
 			strStack := string(debug.Stack())
 
 			var err error
@@ -305,21 +314,21 @@ func Echo(err error) string {
 			case error:
 				err = v
 			default:
-				err = fmt.Errorf(message)
+				err = fmt.Errorf("func error")
 			}
 
-			log.Printf("Terror funcDoWarn/funcDoError recovered: %s. %s\n", err.Error(), strStack)
+			log.Printf("%s recovered: %s. %s\n", message, err.Error(), strStack)
 		}
 	}()
 
 	// execute function
 	if level == int(ErrLevelWarn) {
 		if funcDoWarn != nil {
-			(*funcDoWarn)(nil, err)
+			(*funcDoWarn)(metaData, err)
 		}
 	} else {
 		if funcDoError != nil {
-			(*funcDoError)(nil, err)
+			(*funcDoError)(metaData, err)
 		}
 	}
 
@@ -327,7 +336,7 @@ func Echo(err error) string {
 }
 
 // echoPanic will walk through panic stack and echo output to the screen
-func echoPanic(err *TError) string {
+func echoPanic(err *TError, metaData Meta) string {
 	if err == nil {
 		return "Error is nil (echoPanic)"
 	}
@@ -353,7 +362,8 @@ func echoPanic(err *TError) string {
 	}
 
 	// Red background and White Blinking PANIC text
-	out := fmt.Sprintf("\033[5;41;37mPANIC\033[0m ver: %s  %s \n%+v", AppVersion, err.Message, strings.Join(lines, "\n"))
+	// Note: panic has no true origin err source message, so get from err.Err.Error()
+	out := fmt.Sprintf("\033[5;41;37mPANIC\033[0m ver: %s  %s. %s \n%+v", AppVersion, err.Err.Error(), err.Message, strings.Join(lines, "\n"))
 	vout := fmt.Sprintf("PANIC  %s\n%+v", err.Message, strings.Join(vlines, "\n"))
 
 	log.Println(out)
@@ -361,7 +371,7 @@ func echoPanic(err *TError) string {
 	// recover from panic from funcDoPanic
 	defer func() {
 		if rec := recover(); rec != nil {
-			message := "Terror funcDoPanic panick-panick"
+			message := "terror funcDoPanic panick-panick"
 			strStack := string(debug.Stack())
 
 			var err error
@@ -369,16 +379,16 @@ func echoPanic(err *TError) string {
 			case error:
 				err = v
 			default:
-				err = fmt.Errorf(message)
+				err = fmt.Errorf("funcDoPanic error")
 			}
 
-			log.Printf("Terror funcDoPanic panick-panick recovered: %s. %s\n", err.Error(), strStack)
+			log.Printf("%s recovered: %s. %s\n", message, err.Error(), strStack)
 		}
 	}()
 
 	// exec function
 	if funcDoPanic != nil {
-		(*funcDoPanic)(nil, err)
+		(*funcDoPanic)(metaData, err)
 	}
 
 	return vout

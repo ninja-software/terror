@@ -7,7 +7,7 @@ import (
 	"github.com/ninja-software/terror/v2"
 )
 
-// example of warn, with callback
+// example of warn
 
 const appVersion = "v1.2.3"
 

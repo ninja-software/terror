@@ -21,13 +21,21 @@ func isModTwo(i int) error {
 	return nil
 }
 
+func doCalc(i int) error {
+	err := isModTwo(i)
+	if err != nil {
+		return terror.Error(err)
+	}
+	return nil
+}
+
 func main() {
 	// set globally
 	terror.SetVersion(appVersion)
 
 	for i := 0; i < 7; i++ {
 		fmt.Println("input", i)
-		err := isModTwo(i)
+		err := doCalc(i)
 		if err != nil && strings.Contains(err.Error(), "not mod 2") {
 			terror.Echo(terror.Warn(err))
 		} else if err != nil {

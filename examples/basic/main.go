@@ -28,7 +28,7 @@ func two(url string) (*http.Response, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		// trace will show error msg boom
-		// return nil, terror.Error(err, "boom")
+		return nil, terror.Error(err, "boom")
 
 		// bad! will lose tracing detail
 		// return nil, terror.ErrBadContext
@@ -42,7 +42,7 @@ func two(url string) (*http.Response, error) {
 
 func main() {
 	// set globally
-	terror.SetVersion(AppVersion)
+	terror.SetVersion(appVersion)
 
 	// test multi process
 	for i := 0; i < 3; i++ {

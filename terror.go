@@ -363,7 +363,11 @@ func echoPanic(err *TError, metaData Meta) string {
 
 	// Red background and White Blinking PANIC text
 	// Note: panic has no true origin err source message, so get from err.Err.Error()
-	out := fmt.Sprintf("\033[5;41;37mPANIC\033[0m ver: %s  %s. %s \n%+v", AppVersion, err.Err.Error(), err.Message, strings.Join(lines, "\n"))
+	msg := err.Err.Error()
+	if msg != err.Message {
+		msg += ". " + err.Message
+	}
+	out := fmt.Sprintf("\033[5;41;37mPANIC\033[0m ver: %s  %s \n%+v", AppVersion, msg, strings.Join(lines, "\n"))
 	vout := fmt.Sprintf("PANIC  %s\n%+v", err.Message, strings.Join(vlines, "\n"))
 
 	log.Println(out)

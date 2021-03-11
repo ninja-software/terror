@@ -7,17 +7,18 @@ import (
 	"net/http"
 	"time"
 
-	"../../terror"
-	// "github.com/ninja-software/terror/v2"
+	"github.com/ninja-software/terror/v2"
 )
 
-const AppVersion = "v1.2.3"
+// example of simple basic error
+
+const appVersion = "v1.2.3"
 
 func one() (*http.Response, error) {
 	// fail on purpose
 	resp, err := two("http://example.commmm/")
 	if err != nil {
-		return nil, terror.New(err, "get website")
+		return nil, terror.Error(err, "get website")
 	}
 
 	return resp, nil
@@ -27,7 +28,7 @@ func two(url string) (*http.Response, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		// trace will show error msg boom
-		return nil, terror.New(err, "boom")
+		return nil, terror.Error(err, "boom")
 
 		// bad! will lose tracing detail
 		// return nil, terror.ErrBadContext
@@ -41,7 +42,7 @@ func two(url string) (*http.Response, error) {
 
 func main() {
 	// set globally
-	terror.SetVersion(AppVersion)
+	terror.SetVersion(appVersion)
 
 	// test multi process
 	for i := 0; i < 3; i++ {

@@ -4,32 +4,50 @@
 
 Go stacktrace sometimes are hard read and figure out, especially when it is very nested.
 
-Sometimes you just want to know just the basic error message and their location. This helps you to do that.
+Sometimes you just want to error message and their location without all the noise. This helps you to do that.
+
+### Changelog
+
+v2 introduce callbacks for various error level, warn/error/panic, removed `.New()` and added `.Warn()` `.Error()` `.Panic()` for each respective error level.
 
 ### Install
 
-`go get github.com/ninja-software/terror`
+`go get github.com/ninja-software/terror/v2`
 
 ### Usage
 
-caller
+Prepare error:
 
 ```go
-resp, err := http.Get("http://example.com/")
-if err != nil {
-    return nil, terror.New(err, "get website")
+package main
+
+import (
+	"net/http"
+
+	"github.com/ninja-software/terror/v2"
+)
+
+func getSite() error {
+	_, err := http.Get("http://example.commm/")
+	if err != nil {
+		return terror.Error(err)
+	}
+	return nil
 }
-```
 
-recover
+func main() {
+	err := getSite()
+	if err != nil {
+		terror.Echo(terror.Error(err))
+		return
+	}
+}
 
-```go
-terror.Echo(err)
 ```
 
 ### Note
 
-Always use `terror.Error()` or it will not trace. E.g.
+Always wrap error using `.Warn()` or `.Error()` or `.Panic()` or it will not have trace info. E.g.
 
 ```go
 return terror.Error(terror.ErrBadContext, "")  // good
@@ -50,3 +68,7 @@ Blank string like `terror.Error(err, "")`, will default to use err.Error() strin
 ```
 
 ```
+
+### Examples
+
+For more indepth example, look inside example folder

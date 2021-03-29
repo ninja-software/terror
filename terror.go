@@ -219,7 +219,7 @@ func GetLevel(err error) ErrLevel {
 }
 
 // Echo will walk through error stack and echo output to the screen
-func Echo(err error) string {
+func Echo(err error, noEchos ...bool) string {
 	if err == nil {
 		return "Error is nil (Echo)"
 	}
@@ -240,7 +240,7 @@ func Echo(err error) string {
 				level = int(xErr.Level)
 			}
 			if xErr.Level == ErrLevelPanic {
-				return echoPanic(xErr)
+				return echoPanic(xErr, noEchos...)
 			}
 			i++
 			errLines = append(errLines, fmt.Sprintf("  %d > \033[1;34m%s\033[0m[%s:%d] %v", i, xErr.FuncName, xErr.File, xErr.Line, xErr))
@@ -253,7 +253,7 @@ func Echo(err error) string {
 				level = int(xe.Level)
 			}
 			if xErr.Level == ErrLevelPanic {
-				return echoPanic(xErr)
+				return echoPanic(xErr, noEchos...)
 			}
 			i++
 			errLines = append(errLines, fmt.Sprintf("  %d > \033[1;34m%s\033[0m[%s:%d] %v", i, xe.FuncName, xe.File, xe.Line, xe))
@@ -292,7 +292,9 @@ func Echo(err error) string {
 	msg := strings.SplitAfterN(verrLines[0], " > ", 2)[1]
 	vout := fmt.Sprintf("ERROR  %s\n%+v", msg, strings.Join(verrLines, "\n"))
 
-	log.Println(out)
+	if len(noEchos) > 0 && noEchos[0] {
+		log.Println(out)
+	}
 
 	// recover from panic from funcDoWarn, funcDoError
 	defer func() {
@@ -327,7 +329,7 @@ func Echo(err error) string {
 }
 
 // echoPanic will walk through panic stack and echo output to the screen
-func echoPanic(err *TError) string {
+func echoPanic(err *TError, noEchos ...bool) string {
 	if err == nil {
 		return "Error is nil (echoPanic)"
 	}
@@ -356,7 +358,9 @@ func echoPanic(err *TError) string {
 	out := fmt.Sprintf("\033[5;41;37mPANIC\033[0m ver: %s  %s \n%+v", AppVersion, err.Message, strings.Join(lines, "\n"))
 	vout := fmt.Sprintf("PANIC  %s\n%+v", err.Message, strings.Join(vlines, "\n"))
 
-	log.Println(out)
+	if len(noEchos) > 0 && noEchos[0] {
+		log.Println(out)
+	}
 
 	// recover from panic from funcDoPanic
 	defer func() {

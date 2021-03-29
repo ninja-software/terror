@@ -42,10 +42,6 @@ var ErrBadCredentials = errors.New("bad credentials")
 // ErrNotImplemented for non-implemented funcs
 var ErrNotImplemented = errors.New("not implemented")
 
-// ErrUnauthorized for bad permissions.
-// Deprecated: Use terror.ErrUnauthorised instead
-var ErrUnauthorized = errors.New("unauthorized")
-
 // ErrUnauthorised for bad permissions
 var ErrUnauthorised = errors.New("unauthorised")
 

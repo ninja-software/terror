@@ -76,7 +76,7 @@ func SetVersion(v string) {
 
 // Error mimic golang errors.Error
 func (e *TError) Error() string {
-	return e.Message
+	return e.Err.Error()
 }
 
 // Unwrap the underlying error

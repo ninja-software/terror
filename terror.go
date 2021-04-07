@@ -14,7 +14,7 @@ import (
 )
 
 // baseVersion actual version of terror module
-const baseVersion string = "v2.0.4"
+const baseVersion string = "v2.0.5"
 
 // ErrKind Kind of error
 type ErrKind string
@@ -169,9 +169,17 @@ func Error(err error, friendlyMessage ...string) *TError {
 	pc, file, line, _ := runtime.Caller(1)
 	funcName := runtime.FuncForPC(pc).Name()
 
+	// if friendly message passed, set message
+	// if not, use child friendly message
 	msg := err.Error()
 	if len(friendlyMessage) > 0 {
 		msg = strings.Join(friendlyMessage, ". ")
+
+	} else {
+		var bErr *TError
+		if errors.As(err, &bErr) {
+			msg = bErr.Message
+		}
 	}
 
 	return new(err, file, funcName, line, msg, ErrKindSystem, ErrLevelError)
@@ -184,9 +192,17 @@ func Panic(err error, friendlyMessage ...string) *TError {
 		err = fmt.Errorf("Error is nil (Panic)")
 	}
 
+	// if friendly message passed, set message
+	// if not, use child friendly message
 	msg := err.Error()
 	if len(friendlyMessage) > 0 {
 		msg = strings.Join(friendlyMessage, ". ")
+
+	} else {
+		var bErr *TError
+		if errors.As(err, &bErr) {
+			msg = bErr.Message
+		}
 	}
 
 	return &TError{
@@ -203,9 +219,17 @@ func Warn(err error, friendlyMessage ...string) *TError {
 		err = fmt.Errorf("Error is nil (Warn)")
 	}
 
+	// if friendly message passed, set message
+	// if not, use child friendly message
 	msg := err.Error()
 	if len(friendlyMessage) > 0 {
 		msg = strings.Join(friendlyMessage, ". ")
+
+	} else {
+		var bErr *TError
+		if errors.As(err, &bErr) {
+			msg = bErr.Message
+		}
 	}
 
 	return &TError{

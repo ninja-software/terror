@@ -1,58 +1,59 @@
 package terror
 
-import (
-	"errors"
-)
+import "fmt"
 
 // A list of errors that is pre-made
 
 // ErrDataloader when could not retrieve data
-var ErrDataloader = errors.New("could not fetch data")
+var ErrDataloader = fmt.Errorf("could not fetch data")
 
 // ErrDataBlank when data is blank/null, when it shouldnt
-var ErrDataBlank = errors.New("blank data")
+var ErrDataBlank = fmt.Errorf("blank data")
 
 // ErrNoKeys error when no keys provided to GetMany
-var ErrNoKeys = errors.New("no keys provided")
+var ErrNoKeys = fmt.Errorf("no keys provided")
 
 // ErrDataArchived when data is archived and cannot be changed
-var ErrDataArchived = errors.New("data already archived")
+var ErrDataArchived = fmt.Errorf("data already archived")
 
 // ErrWrongLength error when GetMany return wrong number of data
-var ErrWrongLength = errors.New("get many return wrong length")
+var ErrWrongLength = fmt.Errorf("get many return wrong length")
 
 // ErrInvalidInput when data is invalid
-var ErrInvalidInput = errors.New("invalid input data")
+var ErrInvalidInput = fmt.Errorf("invalid input data")
 
 // ErrBadClaims when JWT could not be read
-var ErrBadClaims = errors.New("could not read credentials from JWT")
+var ErrBadClaims = fmt.Errorf("could not read credentials from JWT")
 
 // ErrBlacklisted when a typecast fails
-var ErrBlacklisted = errors.New("token has been blacklisted")
+var ErrBlacklisted = fmt.Errorf("token has been blacklisted")
 
 // ErrTypeCast when a typecast fails
-var ErrTypeCast = errors.New("could not cast interface to type")
+var ErrTypeCast = fmt.Errorf("could not cast interface to type")
 
 // ErrParse when a parse fails
-var ErrParse = errors.New("could not parse input")
+var ErrParse = fmt.Errorf("could not parse input")
 
 // ErrBadCredentials when a bad username or password is passed in
-var ErrBadCredentials = errors.New("bad credentials")
+var ErrBadCredentials = fmt.Errorf("bad credentials")
 
 // ErrNotImplemented for non-implemented funcs
-var ErrNotImplemented = errors.New("not implemented")
+var ErrNotImplemented = fmt.Errorf("not implemented")
 
-// ErrUnauthorised for bad permissions
-var ErrUnauthorised = errors.New("unauthorised")
+// ErrUnauthorised is for when unauthenticated
+var ErrUnauthorised = fmt.Errorf("unauthorised")
 
 // ErrNilUUID for nil uuid
-var ErrNilUUID = errors.New("uuid is nil")
+var ErrNilUUID = fmt.Errorf("uuid is nil")
 
 // ErrBadContext for missing context values
-var ErrBadContext = errors.New("bad context")
+var ErrBadContext = fmt.Errorf("bad context")
 
 // ErrAuthNoEmail during authentication when login failed due to non-existant user email address
-var ErrAuthNoEmail = errors.New("user not found")
+var ErrAuthNoEmail = fmt.Errorf("user not found")
 
 // ErrAuthWrongPassword during authentication when login failed due to incorrect incorrect password
-var ErrAuthWrongPassword = errors.New("wrong password")
+var ErrAuthWrongPassword = fmt.Errorf("wrong password")
+
+// ErrForbidden when user access is for not allowed access
+var ErrForbidden = fmt.Errorf("access forbidden")

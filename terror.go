@@ -14,7 +14,7 @@ import (
 )
 
 // baseVersion actual version of terror module
-const baseVersion string = "v2.0.5"
+const baseVersion string = "v2.0.6"
 
 // ErrKind Kind of error
 type ErrKind string

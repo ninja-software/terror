@@ -75,8 +75,8 @@ func SetVersion(v string) {
 }
 
 // MarshalText implements text marshaler interface
-func (e *TError) MarshalText() ([]byte, error)
-  return []byte(e.Message), nil
+func (e *TError) MarshalText() ([]byte, error) {
+	return []byte(e.Message), nil
 }
 
 // Error mimic golang errors.Error

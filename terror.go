@@ -310,8 +310,21 @@ func Echo(err error, noEchos ...bool) string {
 
 		} else {
 			i++
-			errLines = append(errLines, fmt.Sprintf("  %d > %+v", i, g))
-			verrLines = append(verrLines, fmt.Sprintf("  %d > %+v", i, g))
+
+			if i == 1 {
+				// vanilla unwrapped error and level 1
+				// for those just want to quickly echo level 1 error without wrapping using terror.Error()
+				pc, file, line, _ := runtime.Caller(1)
+				funcName := runtime.FuncForPC(pc).Name()
+
+				errLines = append(errLines, fmt.Sprintf("  %d > \033[1;34m%s\033[0m[%s:%d] %v", i, funcName, file, line, g))
+				verrLines = append(verrLines, fmt.Sprintf("  %d > %s[%s:%d] %v", i, funcName, file, line, g))
+
+			} else {
+				// wrapped vanilla error and not level 1
+				errLines = append(errLines, fmt.Sprintf("  %d > %+v", i, g))
+				verrLines = append(verrLines, fmt.Sprintf("  %d > %+v", i, g))
+			}
 			break
 		}
 

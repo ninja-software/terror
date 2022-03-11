@@ -14,7 +14,7 @@ import (
 )
 
 // baseVersion actual version of terror module
-const baseVersion string = "v2.0.9"
+const baseVersion string = "v2.0.10"
 
 // ErrKind Kind of error
 type ErrKind string
@@ -165,13 +165,12 @@ func SetCallbackPanic(callback funcExec) {
 }
 
 // Error returns TError with level error
-func Error(err error, friendlyMessage ...string) (x *TError) {
+func Error(err error, friendlyMessage ...string) error {
 	// deals with accidental error == nil
 	if err == nil {
 		pc, file, line, _ := runtime.Caller(1)
 		funcName := runtime.FuncForPC(pc).Name()
-		fmt.Printf("WARN Error(err) is nil \033[1;34m%s\033[0m[%s:%d]\n", funcName, file, line)
-		x = nil
+		log.Printf("Error is nil (Echo) \033[1;34m%s\033[0m[%s:%d]\n", funcName, file, line)
 		return nil
 	}
 
@@ -195,12 +194,12 @@ func Error(err error, friendlyMessage ...string) (x *TError) {
 }
 
 // Panic returns a new TError with level Panic
-func Panic(err error, friendlyMessage ...string) *TError {
+func Panic(err error, friendlyMessage ...string) error {
 	// deals with accidental error == nil
 	if err == nil {
 		pc, file, line, _ := runtime.Caller(1)
 		funcName := runtime.FuncForPC(pc).Name()
-		fmt.Printf("WARN Panic(err) is nil \033[1;34m%s\033[0m[%s:%d]\n", funcName, file, line)
+		log.Printf("Error is nil (Panic) \033[1;34m%s\033[0m[%s:%d]\n", funcName, file, line)
 		return nil
 	}
 
@@ -225,12 +224,12 @@ func Panic(err error, friendlyMessage ...string) *TError {
 }
 
 // Warn returns a new TError with level Warn
-func Warn(err error, friendlyMessage ...string) *TError {
+func Warn(err error, friendlyMessage ...string) error {
 	// deals with accidental error == nil
 	if err == nil {
 		pc, file, line, _ := runtime.Caller(1)
 		funcName := runtime.FuncForPC(pc).Name()
-		fmt.Printf("WARN Warn(err) is nil \033[1;34m%s\033[0m[%s:%d]\n", funcName, file, line)
+		log.Printf("Error is nil (Warn) \033[1;34m%s\033[0m[%s:%d]\n", funcName, file, line)
 		return nil
 	}
 
